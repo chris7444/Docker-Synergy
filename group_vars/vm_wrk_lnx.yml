@@ -1,22 +1,14 @@
-cpus: '4'
-ram: '65536'
-disk2_size: '500'
-disk2: '/dev/sdb'
-disk2_part: '/dev/sdb1'
-orchestrator: kubernetes
+cpus: '4'                               # number of vCPUS you want to allocated to worker nodes
+ram: '65536'                            # amount of RAM in MBs	
+disk2_size: '500'                       # disk2 is the data disk (ie not the boot disk). This is the size of this disk expressed in GBs
+disk2: '/dev/sdb'                       # This is an input, this name depends on the OS, if you build the Red Hat template according to the documentation, then the data disk is i/dev/sdb
+disk2_part: '/dev/sdb1'                 # partition used to storage /var/lib/docker
+orchestrator: kubernetes                # By default worker node will be assigned to the kubernetes orchestrator
+iscsi_devices: ['ens224']               # this is only needed if  iscsi_addr is defined, in which case you should have a dedicated portgroup for the iSCSI VLAN(s). 
 
 #
 # the following data structures are specific to VMWare VMs and are used as such by the ansible module vmware_guest 
 #
-networks:
-  - name: '{{ vm_portgroup }}'
-    ip:  "{{ ip_addr | ipaddr('address') }}"
-    netmask: "{{ ip_addr | ipaddr('netmask') }}"
-    gateway: "{{ gateway }}"
-#  - name: 'dpgISCSI'
-#    ip:  "{{ iscsi_addr | ipaddr('address') }}"
-#    netmask: "{{ iscsi_addr | ipaddr('netmask') }}"
-
 disks_specs:
   - size_gb:  '{{ disk1_size }}'
     type: thin
@@ -25,4 +17,17 @@ disks_specs:
     type: thin
     datastore: "{{ datastores | random }}"
 
+net_bare:
+  - name: '{{ vm_portgroup }}'
+    ip:  "{{ ip_addr | ipaddr('address') }}"
+    netmask: "{{ ip_addr | ipaddr('netmask') }}"
+    gateway: "{{ gateway }}"
 
+net_with_iscsi:
+  - name: '{{ vm_portgroup }}'
+    ip:  "{{ ip_addr | ipaddr('address') }}"
+    netmask: "{{ ip_addr | ipaddr('netmask') }}"
+    gateway: "{{ gateway }}"
+  - name: 'dpgiSCSI'
+
+networks: "{% if iscsi_addr is defined %}{{ net_with_iscsi }}{% else %}{{ net_bare }}{% endif %}"

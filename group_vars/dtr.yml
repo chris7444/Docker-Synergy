@@ -1,12 +1,16 @@
+cpus: '2'                               # number of vCPUS you want to allocated to worker nodes
+ram: '16384'                            # amount of RAM in MBs
+disk2_size: '500'                       # disk2 is the data disk (ie not the boot disk). This is the size of this disk expressed in GBs
+disk2: '/dev/sdb'                       # This is an input, this name depends on the OS, if you build the Red Hat template according to the documentation, then the data disk is i/dev/sdb
+disk2_part: '/dev/sdb1'                 # partition used to storage /var/lib/docker
+orchestrator: swarm                     # By default worker node will be assigned to the kubernetes orchestrator
+iscsi_devices: ['ens224']               # this is only needed if  iscsi_addr is defined, in which case you should have a dedicated portgroup for the iSCSI VLAN(s).
+
 networks:
   - name: '{{ vm_portgroup }}'
     ip:  "{{ ip_addr | ipaddr('address') }}"
     netmask: "{{ ip_addr | ipaddr('netmask') }}"
     gateway: "{{ gateway }}"
-
-#  - name: 'dpgISCSI'
-#    ip:  "{{ iscsi_addr | ipaddr('address') }}"
-#    netmask: "{{ iscsi_addr | ipaddr('netmask') }}"
 
 disks_specs:
   - size_gb: '{{ disk1_size }}'
@@ -15,13 +19,4 @@ disks_specs:
   - size_gb: '{{ disk2_size }}'
     type: thin
     datastore: "{{ datastores | random }}"
-
-disk2: '/dev/sdb' 
-disk2_part: '/dev/sdb1'
-
-cpus: '2'
-ram: '16384'
-disk2_size: '500'
-orchestrator: swarm
-node_policy: 'clh-gold'
 
